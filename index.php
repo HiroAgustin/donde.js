@@ -11,17 +11,33 @@
   <script>
     new Donde({
       idMap: 'map'
-    , markers: <?php include 'example.json' ?>
+    , zoom: 16
+    , markers: (<?php include 'residuos.json' ?>).features
+    , errorMessage: 'No sabemos dónde estas :('
     , defaultLocation: {
         latitude: -34.8937720817105
       , longitude: -56.1659574508667
       }
     , icons: {
-        Chupi: 'img/marker-1.png'
-      , Baile: 'img/marker-2.png'
-      , Morfi: 'img/marker-3.png'
+        LATA: 'img/marker-1.png'
+      , PILAS: 'img/marker-2.png'
+      , VIDRIO: 'img/marker-3.png'
+      , PLASTICO: 'img/marker-4.png'
       }
-    , errorMessage: 'No sabemos dónde estas :('
+    , mapping: {
+        type: function (item)
+        {
+          return item.properties.TIPO_RESID;
+        }
+      , latitude: function (item)
+        {
+          return item.geometry.coordinates[1];
+        }
+      , longitude: function (item)
+        {
+          return item.geometry.coordinates[0];
+        }
+      }
     }).init();
   </script>
 </body>

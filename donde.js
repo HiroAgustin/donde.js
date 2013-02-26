@@ -10,6 +10,7 @@
 
   var default_options = {
     idMap: 'map'
+  , zoom: 15
   , defaultLocation: {
       latitude: -34.8937720817105
     , longitude: -56.1659574508667
@@ -31,7 +32,7 @@
         mapTypeId: google.maps.MapTypeId.ROADMAP
       , streetViewControl: false
       , mapTypeControl: false
-      , zoom: 15
+      , zoom: this.options.zoom
       });
     }
 
@@ -126,6 +127,19 @@
       return this;
     }
 
+  , mapAttributes: function (item)
+    {
+      if (this.options.mapping)
+      {
+        _.each(this.options.mapping, function (map, key)
+        {
+          item[key] = map(item);
+        });
+      }
+
+      return item;
+    }
+
   , addMarkers: function ()
     {
       var self = this;
@@ -137,7 +151,7 @@
 
       _.each(this.markers, function (item)
       {
-        self.addMarker(item);
+        self.addMarker(self.mapAttributes(item));
       });
 
       return this;
