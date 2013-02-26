@@ -1,0 +1,7 @@
+{
+  "laxcomma": true
+, "browser": true
+, "eqeqeq": true
+, "devel": true
+, "expr": true
+}
