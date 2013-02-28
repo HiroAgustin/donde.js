@@ -1,5 +1,6 @@
 {
-  "laxcomma": true
+  "predef": ["google", "_"]
+, "laxcomma": true
 , "browser": true
 , "eqeqeq": true
 , "devel": true
