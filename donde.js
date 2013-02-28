@@ -20,6 +20,7 @@
   var Donde = function Donde (options)
   {
     this.options = _.extend({}, default_options, options);
+    console.log(this.options.idMap);
     this.markers = this.options.markers;
     return this;
   };
