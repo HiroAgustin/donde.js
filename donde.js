@@ -1,9 +1,9 @@
 /*!
+ * donde.js 0.1
+ *
  * Copyright 2013 Agustin Diaz @hiroagustin
- * MIT license
+ * Released under the MIT license
  */
-
-/*global google:false, _:false */
 ;(function ()
 {
   'use strict';
