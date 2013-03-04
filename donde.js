@@ -211,7 +211,7 @@
         });
 
       });
-
+    }
 
   , toggleType: function (type)
     {
