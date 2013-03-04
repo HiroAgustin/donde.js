@@ -1,6 +1,5 @@
 /*!
  * donde.js 0.1
- *
  * Copyright 2013 Agustin Diaz @hiroagustin
  * Released under the MIT license
  */
@@ -20,8 +19,8 @@
   var Donde = function Donde (options)
   {
     this.options = _.extend({}, default_options, options);
-    console.log(this.options.idMap);
     this.markers = this.options.markers;
+
     return this;
   };
 
@@ -40,20 +39,27 @@
   , createMarker: function (marker)
     {
       marker = marker || {};
+
       return new google.maps.Marker({
         icon: marker.icon
       , map: this.map
-      , position: new google.maps.LatLng(marker.latitude, marker.longitude)
+      , position: this.toLatLng(marker)
       });
     }
 
-  , setInitialPosition: function (coords)
+  , toLatLng: function (position)
     {
-      var location = new google.maps.LatLng(coords.latitude, coords.longitude);
-      this.initialPosition = location;
+      return position instanceof google.maps.LatLng ? position : new google.maps.LatLng(position.latitude, position.longitude);
+    }
+
+  , setInitialPosition: function (position)
+    {
+      position = this.toLatLng(position);
+
+      this.initialPosition = position;
       
-      this.map.setCenter(location);
-      this.userLocationMarker.setPosition(location);
+      this.map.setCenter(position);
+      this.userLocationMarker.setPosition(position);
 
       return this;
     }
@@ -62,6 +68,7 @@
     {
       this.setInitialPosition(this.options.defaultLocation);
       this.options.errorMessage && alert(this.options.errorMessage);
+
       console.log('Initial location not found.');
 
       return this;
@@ -69,10 +76,7 @@
 
   , panToPosition: function (position)
     {
-      if (!(position instanceof google.maps.LatLng))
-      {
-        position = new google.maps.LatLng(position.latitude, position.longitude);
-      }
+      position = this.toLatLng(position);
 
       this.map.panTo(position);
 
@@ -82,6 +86,7 @@
   , panToInitialPosition: function ()
     {
       this.panToPosition(this.initialPosition);
+
       return this;
     }
 
@@ -175,6 +180,51 @@
       return this;
     }
 
+  , toggleType: function (type)
+    {
+      var group = this.groups[type];
+
+      _.each(group.markers, function (marker)
+      {
+        marker.setVisible(!!group.isHidden);
+      });
+
+      group.isHidden = !group.isHidden;
+    }
+
+  , listen: function (container)
+    {
+      var self = this;
+
+      container.addEventListener('click', function (e)
+      {
+        self.toggleType(e.target.dataset.type);
+        e.target.dataset.isActive = !e.target.dataset.isActive;
+      }, false);
+    }
+
+  , addControls: function (container)
+    {
+      var list = document.createElement('ul')
+        , element;
+
+      _.each(this.groups, function (group, key)
+      {
+        element = document.createElement('li');
+
+        element.dataset.type = key;
+        element.dataset.isActive = !group.isHidden;
+
+        element.appendChild(document.createTextNode(key));
+
+        list.appendChild(element);
+      });
+
+      container.appendChild(list);
+
+      this.listen(container);
+    }
+
   , init: function ()
     {
       if (document.getElementById(this.options.idMap))
@@ -201,6 +251,11 @@
       else
       {
         console.error('Map placeholder not found.');
+      }
+
+      if (this.options.idControls && document.getElementById(this.options.idControls))
+      {
+        this.addControls(document.getElementById(this.options.idControls));
       }
 
       return this;
