@@ -5,4 +5,5 @@
 , "eqeqeq": true
 , "devel": true
 , "expr": true
+, "boss": true /* es como un like a boss */
 }
