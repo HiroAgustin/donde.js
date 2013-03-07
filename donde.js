@@ -180,6 +180,7 @@
       return this;
     }
 
+
   , searchPlace: function (parameters)
     {
       var placeService = new google.maps.places.PlacesService(this.map)
@@ -210,6 +211,51 @@
         });
 
       });
+    }
+
+  , toggleType: function (type)
+    {
+      var group = this.groups[type];
+
+      _.each(group.markers, function (marker)
+      {
+        marker.setVisible(!!group.isHidden);
+      });
+
+      group.isHidden = !group.isHidden;
+    }
+
+  , listen: function (container)
+    {
+      var self = this;
+
+      container.addEventListener('click', function (e)
+      {
+        self.toggleType(e.target.dataset.type);
+        e.target.dataset.isActive = !e.target.dataset.isActive;
+      }, false);
+    }
+
+  , addControls: function (container)
+    {
+      var list = document.createElement('ul')
+        , element;
+
+      _.each(this.groups, function (group, key)
+      {
+        element = document.createElement('li');
+
+        element.dataset.type = key;
+        element.dataset.isActive = !group.isHidden;
+
+        element.appendChild(document.createTextNode(key));
+
+        list.appendChild(element);
+      });
+
+      container.appendChild(list);
+
+      this.listen(container);
 
     }
 
@@ -239,6 +285,11 @@
       else
       {
         console.error('Map placeholder not found.');
+      }
+
+      if (this.options.idControls && document.getElementById(this.options.idControls))
+      {
+        this.addControls(document.getElementById(this.options.idControls));
       }
 
       return this;
