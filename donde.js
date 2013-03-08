@@ -24,7 +24,7 @@
     return this;
   };
 
-  _.extend(Donde.prototype, {
+  Donde.prototype = {
 
     createMap: function (container)
     {
@@ -261,9 +261,12 @@
 
   , init: function ()
     {
-      if (document.getElementById(this.options.idMap))
+      var mapElement = document.getElementById(this.options.idMap)
+        , controlsElement;
+
+      if (mapElement)
       {
-        this.map = this.createMap(document.getElementById(this.options.idMap));
+        this.map = this.createMap(mapElement);
 
         this.userLocationMarker = this.createMarker();
         this.userLocationMarker.setClickable(false);
@@ -287,15 +290,16 @@
         console.error('Map placeholder not found.');
       }
 
-      if (this.options.idControls && document.getElementById(this.options.idControls))
+      if (this.options.idControls &&
+        controlsElement = document.getElementById(this.options.idControls))
       {
-        this.addControls(document.getElementById(this.options.idControls));
+        this.addControls(controlsElement);
       }
 
       return this;
     }
 
-  });
+  };
 
   window.Donde = Donde;
 
