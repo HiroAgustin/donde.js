@@ -14,9 +14,20 @@
       latitude: -34.8937720817105
     , longitude: -56.1659574508667
     }
-  };
-
-  var Donde = function Donde (options)
+  }
+  , Utils = {
+    each: function (object, fn) {
+      for (var i in object) {
+        if (object.constructor === Array) {
+          fn(object[i]);
+        } else {
+          // assuming is an object
+          fn(object[i], i);
+        }
+      }
+    }
+  }
+  , Donde = function Donde (options)
   {
     this.options = _.extend({}, default_options, options);
     this.markers = this.options.markers;
@@ -137,7 +148,7 @@
     {
       if (this.options.mapping)
       {
-        _.each(this.options.mapping, function (map, key)
+        Utils.each(this.options.mapping, function (map, key)
         {
           item[key] = map(item);
         });
@@ -155,7 +166,7 @@
         console.log('No markers found.');
       }
 
-      _.each(this.markers, function (item)
+      Utils.each(this.markers, function (item)
       {
         self.addMarker(self.mapAttributes(item));
       });
@@ -167,7 +178,7 @@
     {
       var self = this;
 
-      _.each(this.options.icons, function (item, key)
+      Utils.each(this.options.icons, function (item, key)
       {
         if (!(key in self.groups))
         {
@@ -217,7 +228,7 @@
     {
       var group = this.groups[type];
 
-      _.each(group.markers, function (marker)
+      Utils.each(group.markers, function (marker)
       {
         marker.setVisible(!!group.isHidden);
       });
@@ -241,7 +252,7 @@
       var list = document.createElement('ul')
         , element;
 
-      _.each(this.groups, function (group, key)
+      Utils.each(this.groups, function (group, key)
       {
         element = document.createElement('li');
 
@@ -291,7 +302,7 @@
       }
 
       if (this.options.idControls &&
-        controlsElement = document.getElementById(this.options.idControls))
+        (controlsElement = document.getElementById(this.options.idControls)))
       {
         this.addControls(controlsElement);
       }
