@@ -3,7 +3,7 @@
  * Copyright 2013 Agustin Diaz @hiroagustin
  * Released under the MIT license
  */
-;(function ()
+;(function (document, window, undefined)
 {
   'use strict';
 
@@ -16,15 +16,20 @@
     }
   }
   , Utils = {
-    each: function (object, fn) {
+    each: function (object, fn)
+    {
       for (var i in object) {
         if (object.constructor === Array) {
           fn(object[i]);
-        } else {
+        } else if (object.hasOwnProperty && object.hasOwnProperty(i)) {
           // assuming is an object
           fn(object[i], i);
         }
       }
+    }
+    , extend: function ()
+    {
+      //TODO: extend function
     }
   }
   , Donde = function Donde (options)
@@ -65,12 +70,10 @@
 
   , setInitialPosition: function (position)
     {
-      position = this.toLatLng(position);
-
-      this.initialPosition = position;
+      this.initialPosition = this.toLatLng(position);
       
-      this.map.setCenter(position);
-      this.userLocationMarker.setPosition(position);
+      this.map.setCenter(this.initialPosition);
+      this.userLocationMarker.setPosition(this.initialPosition);
 
       return this;
     }
@@ -87,9 +90,7 @@
 
   , panToPosition: function (position)
     {
-      position = this.toLatLng(position);
-
-      this.map.panTo(position);
+      this.map.panTo(this.toLatLng(position));
 
       return this;
     }
@@ -314,4 +315,4 @@
 
   window.Donde = Donde;
 
-}());
+}(document, this));
