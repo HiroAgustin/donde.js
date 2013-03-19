@@ -3,267 +3,305 @@
  * Copyright 2013 Agustin Diaz @hiroagustin
  * Released under the MIT license
  */
-;(function ()
+;(function (window, document)
 {
   'use strict';
 
-  var default_options = {
-    idMap: 'map'
-  , zoom: 15
-  , defaultLocation: {
-      latitude: -34.8937720817105
-    , longitude: -56.1659574508667
+  var defaultOptions = {
+        idMap: 'map'
+      , zoom: 15
+      , defaultLocation: {
+          latitude: -34.8937720817105
+        , longitude: -56.1659574508667
+        }
+      , imageWidth: 37
+      , imageHeight: 34
+      }
+
+    , Donde = function Donde (options)
+      {
+        this.options = this.extend({}, defaultOptions, options);
+        this.markers = this.options.markers;
+        return this;
+      };
+
+  Donde.prototype.extend = function (obj)
+  {
+    var extentions = Array.prototype.slice.call(arguments, 1)
+      , source = null
+      , key = '';
+
+    for (var i = 0; i < extentions.length; i++)
+    {
+      source = extentions[i];
+
+      if (source)
+      {
+        for (key in source)
+        {
+          obj[key] = source[key];
+        }
+      }  
     }
+
+    return obj;
   };
 
-  var Donde = function Donde (options)
+  Donde.prototype.createMap = function (container)
   {
-    this.options = _.extend({}, default_options, options);
-    this.markers = this.options.markers;
+    return new google.maps.Map(container, {
+      mapTypeId: google.maps.MapTypeId.ROADMAP
+    , streetViewControl: false
+    , mapTypeControl: false
+    , zoom: this.options.zoom
+    });
+  };
+
+  Donde.prototype.createMarker = function (marker)
+  {
+    marker = marker || {};
+
+    return new google.maps.Marker({
+      icon: marker.icon
+    , map: this.map
+    , position: this.toLatLng(marker)
+    });
+  };
+
+  Donde.prototype.toLatLng = function toLatLng (position)
+  {
+    return position instanceof google.maps.LatLng ? position : new google.maps.LatLng(position.latitude, position.longitude);
+  };
+
+  Donde.prototype.setInitialPosition = function (position)
+  {
+    position = this.toLatLng(position);
+
+    this.initialPosition = position;
+    
+    this.map.setCenter(position);
+    this.userLocationMarker.setPosition(position);
 
     return this;
   };
 
-  _.extend(Donde.prototype, {
+  Donde.prototype.handleInitialLocationError = function ()
+  {
+    this.setInitialPosition(this.options.defaultLocation);
+    this.options.errorMessage && alert(this.options.errorMessage);
 
-    createMap: function (container)
+    this.notify('Initial location not found.');
+
+    return this;
+  };
+
+  Donde.prototype.notify = function (message)
+  {
+    alert(message);
+  };
+
+  Donde.prototype.panToPosition = function (position)
+  {
+    position = this.toLatLng(position);
+
+    this.map.panTo(position);
+
+    return this;
+  };
+
+  Donde.prototype.panToInitialPosition = function ()
+  {
+    this.panToPosition(this.initialPosition);
+
+    return this;
+  };
+
+  Donde.prototype.addMarker = function (marker)
+  {
+    if (!(marker.type in this.groups))
     {
-      return new google.maps.Map(container, {
-        mapTypeId: google.maps.MapTypeId.ROADMAP
-      , streetViewControl: false
-      , mapTypeControl: false
-      , zoom: this.options.zoom
-      });
+      this.groups[marker.type] = {};
     }
 
-  , createMarker: function (marker)
+    if (!this.groups[marker.type].markers)
     {
-      marker = marker || {};
-
-      return new google.maps.Marker({
-        icon: marker.icon
-      , map: this.map
-      , position: this.toLatLng(marker)
-      });
+      this.groups[marker.type].markers = [];
     }
 
-  , toLatLng: function (position)
-    {
-      return position instanceof google.maps.LatLng ? position : new google.maps.LatLng(position.latitude, position.longitude);
-    }
+    marker.icon = this.groups[marker.type].icon;
 
-  , setInitialPosition: function (position)
-    {
-      position = this.toLatLng(position);
+    this.groups[marker.type].markers.push(
+      this.createMarker(marker)
+    );
 
-      this.initialPosition = position;
-      
-      this.map.setCenter(position);
-      this.userLocationMarker.setPosition(position);
+    return this;
+  };
 
-      return this;
-    }
+  Donde.prototype.getUserPosition = function ()
+  {
+    var self = this;
 
-  , handleInitialLocationError: function ()
-    {
-      this.setInitialPosition(this.options.defaultLocation);
-      this.options.errorMessage && alert(this.options.errorMessage);
-
-      console.log('Initial location not found.');
-
-      return this;
-    }
-
-  , panToPosition: function (position)
-    {
-      position = this.toLatLng(position);
-
-      this.map.panTo(position);
-
-      return this;
-    }
-
-  , panToInitialPosition: function ()
-    {
-      this.panToPosition(this.initialPosition);
-
-      return this;
-    }
-
-  , addMarker: function (marker)
-    {
-      if (!(marker.type in this.groups))
+    navigator.geolocation.getCurrentPosition(
+      function (position)
       {
-        this.groups[marker.type] = {};
+        self.setInitialPosition(position.coords);
       }
-
-      if (!this.groups[marker.type].markers)
+    , function ()
       {
-        this.groups[marker.type].markers = [];
+        self.handleInitialLocationError(arguments);
       }
-
-      marker.icon = this.groups[marker.type].icon;
-
-      this.groups[marker.type].markers.push(
-        this.createMarker(marker)
-      );
-
-      return this;
-    }
-
-  , getUserPosition: function ()
-    {
-      var self = this;
-
-      navigator.geolocation.getCurrentPosition(
-        function (position)
-        {
-          self.setInitialPosition(position.coords);
-        }
-      , function ()
-        {
-          self.handleInitialLocationError(arguments);
-        }
-      , {
-          enableHighAccuracy: true
-        , timeout: 8000
-        }
-      );
-
-      return this;
-    }
-
-  , mapAttributes: function (item)
-    {
-      if (this.options.mapping)
-      {
-        _.each(this.options.mapping, function (map, key)
-        {
-          item[key] = map(item);
-        });
+    , {
+        enableHighAccuracy: true
+      , timeout: 8000
       }
+    );
 
-      return item;
-    }
+    return this;
+  };
 
-  , addMarkers: function ()
+  Donde.prototype.mapAttributes = function (marker)
+  {
+    if (this.options.mapping)
     {
-      var self = this;
+      var mapping = this.options.mapping
+        , key = '';
 
-      if (!this.markers)
+      for (key in mapping)
       {
-        console.log('No markers found.');
+        // 1.llamamos a la función de mapeo
+        // 2.le pasamos por parametro el marcador
+        // 3.seteamos en el marcador el resultado de la funcion
+        marker[key] = mapping[key](marker);
       }
-
-      _.each(this.markers, function (item)
-      {
-        self.addMarker(self.mapAttributes(item));
-      });
-
-      return this;
     }
 
-  , createIcons: function ()
+    return marker;
+  };
+
+  Donde.prototype.addMarkers = function ()
+  {
+    var self = this
+      , markers = this.markers;
+
+    if (!markers)
     {
-      var self = this;
-
-      _.each(this.options.icons, function (item, key)
-      {
-        if (!(key in self.groups))
-        {
-          self.groups[key] = {};
-        }
-
-        self.groups[key].icon = new google.maps.MarkerImage(self.options.icons[key], null, null, null, new google.maps.Size(37,34));
-      });
-
-      return this;
+      this.notify('No markers found.');
     }
 
-  , toggleType: function (type)
+    for (var i = 0; i < markers.length; i++)
     {
-      var group = this.groups[type];
-
-      _.each(group.markers, function (marker)
-      {
-        marker.setVisible(!!group.isHidden);
-      });
-
-      group.isHidden = !group.isHidden;
+      self.addMarker(self.mapAttributes(markers[i]));
     }
 
-  , listen: function (container)
-    {
-      var self = this;
+    return this;
+  };
 
-      container.addEventListener('click', function (e)
+  Donde.prototype.createIcons = function ()
+  {
+    var key = ''
+      , self = this
+      , icons = this.options.icons
+      , width = this.options.imageWidth
+      , height = this.options.imageHeight;
+
+    for (key in icons)
+    {
+      if (!(key in self.groups))
       {
-        self.toggleType(e.target.dataset.type);
-        e.target.dataset.isActive = !e.target.dataset.isActive;
-      }, false);
+        self.groups[key] = {};
+      }
+      // MarkerIma es deprecado en la siguiente version de Google Maps
+      // Cambiar cuanto antes :D
+      self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height)); 
     }
 
-  , addControls: function (container)
+    return this;
+  };
+
+  Donde.prototype.toggleType = function (type)
+  {
+    var group = this.groups[type]
+      , markers = group.markers;
+
+    for (var i = 0; i < markers.length; i++)
     {
-      var list = document.createElement('ul')
-        , element;
-
-      _.each(this.groups, function (group, key)
-      {
-        element = document.createElement('li');
-
-        element.dataset.type = key;
-        element.dataset.isActive = !group.isHidden;
-
-        element.appendChild(document.createTextNode(key));
-
-        list.appendChild(element);
-      });
-
-      container.appendChild(list);
-
-      this.listen(container);
-
+      markers[i].setVisible(!!group.isHidden); 
     }
 
-  , init: function ()
+    group.isHidden = !group.isHidden;
+  };
+
+  Donde.prototype.listen = function (container)
+  {
+    var self = this;
+
+    container.addEventListener('click', function (e)
     {
-      if (document.getElementById(this.options.idMap))
+      self.toggleType(e.target.dataset.type);
+      e.target.dataset.isActive = !e.target.dataset.isActive;
+    }, false);
+  };
+  // Hay que agregarle flexibilidad al html de esto
+  Donde.prototype.addControls = function (container)
+  {
+    var list = document.createElement('ul')
+      , groups = this.groups
+      , element = null
+      , key = '';
+
+    for (key in groups)
+    {
+      element = document.createElement('li');
+
+      element.dataset.type = key;
+      element.dataset.isActive = !groups[key].isHidden;
+
+      element.appendChild(document.createTextNode(key));
+
+      list.appendChild(element); 
+    }
+
+    container.appendChild(list);
+
+    this.listen(container);
+  };
+
+  Donde.prototype.init = function ()
+  {
+    if (document.getElementById(this.options.idMap))
+    {
+      this.map = this.createMap(document.getElementById(this.options.idMap));
+
+      this.userLocationMarker = this.createMarker();
+      this.userLocationMarker.setClickable(false);
+
+      this.groups = {};
+
+      if ('geolocation' in navigator)
       {
-        this.map = this.createMap(document.getElementById(this.options.idMap));
-
-        this.userLocationMarker = this.createMarker();
-        this.userLocationMarker.setClickable(false);
-
-        this.groups = {};
-
-        if ('geolocation' in navigator)
-        {
-          this.getUserPosition();
-        }
-        else
-        {
-          this.handleInitialLocationError();
-        }
-
-        this.createIcons();
-        this.addMarkers();
+        this.getUserPosition();
       }
       else
       {
-        console.error('Map placeholder not found.');
+        this.handleInitialLocationError();
       }
 
-      if (this.options.idControls && document.getElementById(this.options.idControls))
-      {
-        this.addControls(document.getElementById(this.options.idControls));
-      }
-
-      return this;
+      this.createIcons();
+      this.addMarkers();
+    }
+    else
+    {
+      this.notify('Map placeholder not found.');
     }
 
-  });
+    if (this.options.idControls && document.getElementById(this.options.idControls))
+    {
+      this.addControls(document.getElementById(this.options.idControls));
+    }
+
+    return this;
+  };
 
   window.Donde = Donde;
 
-}());
+}(window, document));
