@@ -97,7 +97,8 @@
 
   Donde.prototype.notify = function (message)
   {
-    alert(message);
+    // hay que pensar bien esto
+    // alert(message);
   };
 
   Donde.prototype.panToPosition = function (position)
@@ -210,7 +211,7 @@
       {
         self.groups[key] = {};
       }
-      // MarkerIma es deprecado en la siguiente version de Google Maps
+      // MarkerImage es deprecado en la siguiente version de Google Maps
       // Cambiar cuanto antes :D
       self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height)); 
     }
