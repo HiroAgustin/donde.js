@@ -1,6 +1,9 @@
 {
-  "name": "donde.js"
-, "version": "0.3.1"
-, "main": "./donde.js"
-, "dependencies": {}
+  "name": "donde.js",
+  "version": "0.3.2",
+  "main": "./donde.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/HiroAgustin/donde.js.git"
+  }
 }
