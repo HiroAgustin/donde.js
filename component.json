@@ -1,5 +1,6 @@
 {
   "name": "donde.js"
-, "version": "0.3.0"
-, "main": "donde.js"
+, "version": "0.3.1"
+, "main": "./donde.js"
+, "dependencies": {}
 }
