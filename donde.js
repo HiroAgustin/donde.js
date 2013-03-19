@@ -14,8 +14,10 @@
           latitude: -34.8937720817105
         , longitude: -56.1659574508667
         }
-      , imageWidth: 37
-      , imageHeight: 34
+      , image: {
+          width: 37
+        , height: 34
+        }
       }
 
     , Donde = function Donde (options)
@@ -201,9 +203,10 @@
   {
     var key = ''
       , self = this
-      , icons = this.options.icons
-      , width = this.options.imageWidth
-      , height = this.options.imageHeight;
+      , options = this.options
+      , icons = options.icons
+      , width = options.image.width
+      , height = options.image.height;
 
     for (key in icons)
     {
@@ -213,7 +216,7 @@
       }
       // MarkerImage es deprecado en la siguiente version de Google Maps
       // Cambiar cuanto antes :D
-      self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height)); 
+      self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height));
     }
 
     return this;
