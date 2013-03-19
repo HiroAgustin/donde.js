@@ -239,7 +239,7 @@
     container.addEventListener('click', function (e)
     {
       self.toggleType(e.target.dataset.type);
-      e.target.dataset.isActive = !e.target.dataset.isActive;
+      e.target.dataset.isActive = e.target.dataset.isActive !== 'true';
     }, false);
   };
   // Hay que agregarle flexibilidad al html de esto
