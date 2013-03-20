@@ -1,9 +1,9 @@
 {
-  "predef": ["google", "_"]
+  "predef": ["google"]
 , "laxcomma": true
 , "browser": true
 , "eqeqeq": true
 , "devel": true
 , "expr": true
-, "boss": true /* es como un like a boss */
+, "boss": true
 }

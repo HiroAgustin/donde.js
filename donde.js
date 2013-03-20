@@ -3,28 +3,56 @@
  * Copyright 2013 Agustin Diaz @hiroagustin
  * Released under the MIT license
  */
-;(function ()
+;(function (document, window, undefined)
 {
   'use strict';
 
-  var default_options = {
-    idMap: 'map'
-  , zoom: 15
-  , defaultLocation: {
-      latitude: -34.8937720817105
-    , longitude: -56.1659574508667
-    }
-  };
+  var defaultOptions = {
+        idMap: 'map'
+      , zoom: 15
+      , defaultLocation: {
+          latitude: -34.8937720817105
+        , longitude: -56.1659574508667
+        }
+      , imageWidth: 37
+      , imageHeight: 34
+      }
 
-  var Donde = function Donde (options)
-  {
-    this.options = _.extend({}, default_options, options);
-    this.markers = this.options.markers;
+    , Donde = function Donde (options)
+      {
+        this.options = Utils.extend({}, defaultOptions, options);
+        this.markers = this.options.markers;
+        return this;
+      }
 
-    return this;
-  };
+    , Utils = {
+        extend: function (obj)
+        {
+          var extentions = Array.prototype.slice.call(arguments, 1)
+            , source = null
+            , key = '';
 
-  _.extend(Donde.prototype, {
+          for (var i = 0; i < extentions.length; i++)
+          {
+            source = extentions[i];
+
+            if (source)
+            {
+              for (key in source)
+              {
+                if (source.hasOwnProperty(key))
+                {
+                  obj[key] = source[key];
+                }
+              }
+            }  
+          }
+
+          return obj;
+        }
+      };
+
+  Utils.extend(Donde.prototype, {
 
     createMap: function (container)
     {
@@ -36,7 +64,7 @@
       });
     }
 
-  , createMarker: function (marker)
+    , createMarker: function (marker)
     {
       marker = marker || {};
 
@@ -47,50 +75,54 @@
       });
     }
 
-  , toLatLng: function (position)
+    , toLatLng: function (position)
     {
-      return position instanceof google.maps.LatLng ? position : new google.maps.LatLng(position.latitude, position.longitude);
+      return position instanceof google.maps.LatLng ?
+        position : new google.maps.LatLng(position.latitude, position.longitude);
     }
 
-  , setInitialPosition: function (position)
+    , setInitialPosition: function (position)
     {
-      position = this.toLatLng(position);
-
-      this.initialPosition = position;
+      this.initialPosition = this.toLatLng(position);
       
-      this.map.setCenter(position);
-      this.userLocationMarker.setPosition(position);
+      this.map.setCenter(this.initialPosition);
+      this.userLocationMarker.setPosition(this.initialPosition);
 
       return this;
     }
 
-  , handleInitialLocationError: function ()
+    , handleInitialLocationError: function ()
     {
       this.setInitialPosition(this.options.defaultLocation);
       this.options.errorMessage && alert(this.options.errorMessage);
 
-      console.log('Initial location not found.');
+      this.notify('Initial location not found.');
+
+      // TODO: si adentro de notify podemos retornar "this",
+      // aca vamos a hacer return this.notify("lo que sea");
 
       return this;
     }
 
-  , panToPosition: function (position)
+    , notify: function (message)
     {
-      position = this.toLatLng(position);
-
-      this.map.panTo(position);
-
-      return this;
+      // TODO: hay que pensar bien esto
+      // alert(message);
     }
 
-  , panToInitialPosition: function ()
+    , panToPosition: function (position)
     {
-      this.panToPosition(this.initialPosition);
+      this.map.panTo(this.toLatLng(position));
 
       return this;
     }
 
-  , addMarker: function (marker)
+    , panToInitialPosition: function ()
+    {
+      return this.panToPosition(this.initialPosition);
+    }
+
+    , addMarker: function (marker)
     {
       if (!(marker.type in this.groups))
       {
@@ -111,7 +143,7 @@
       return this;
     }
 
-  , getUserPosition: function ()
+    , getUserPosition: function ()
     {
       var self = this;
 
@@ -133,133 +165,155 @@
       return this;
     }
 
-  , mapAttributes: function (item)
+    , mapAttributes: function (marker)
     {
       if (this.options.mapping)
       {
-        _.each(this.options.mapping, function (map, key)
+        var mapping = this.options.mapping
+          , key = '';
+
+        for (key in mapping)
         {
-          item[key] = map(item);
-        });
+          // 1.llamamos a la función de mapeo
+          // 2.le pasamos por parametro el marcador
+          // 3.seteamos en el marcador el resultado de la funcion
+          if (mapping.hasOwnProperty(key))
+          {
+            marker[key] = mapping[key](marker);
+          }
+        }
       }
 
-      return item;
+      return marker;
     }
 
-  , addMarkers: function ()
+    , addMarkers: function ()
     {
-      var self = this;
+      var self = this
+        , markers = this.markers;
 
-      if (!this.markers)
+      if (!markers)
       {
-        console.log('No markers found.');
+        this.notify('No markers found.');
+      }
+      else
+      {
+        // TODO: revisar esto, tiene sentido que si no hay markers,
+        // se recorran y se haga un add marker ?
+        for (var i = 0; i < markers.length; i++)
+        {
+          self.addMarker(self.mapAttributes(markers[i]));
+        }
       }
 
-      _.each(this.markers, function (item)
-      {
-        self.addMarker(self.mapAttributes(item));
-      });
 
       return this;
     }
 
-  , createIcons: function ()
+    , createIcons: function ()
     {
-      var self = this;
+      var key = ''
+        , self = this
+        , icons = this.options.icons
+        , width = this.options.imageWidth
+        , height = this.options.imageHeight;
 
-      _.each(this.options.icons, function (item, key)
+      for (key in icons)
       {
-        if (!(key in self.groups))
+        if (icons.hasOwnProperty(key))
         {
-          self.groups[key] = {};
+          if (!(key in self.groups))
+          {
+            self.groups[key] = {};
+          }
+          // MarkerImage es deprecado en la siguiente version de Google Maps
+          // Cambiar cuanto antes :D
+          self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height)); 
         }
 
-        self.groups[key].icon = new google.maps.MarkerImage(self.options.icons[key], null, null, null, new google.maps.Size(37,34));
-      });
+      }
 
       return this;
     }
 
-
-  , searchPlace: function (parameters)
+    , toggleType: function (type)
     {
-      var placeService = new google.maps.places.PlacesService(this.map)
-      , self = this;
-      
-      navigator.geolocation.getCurrentPosition(function (position) {
-        placeService.textSearch({
-          query: parameters.query
-          , radius: parameters.radius || 1000
-          , location: new google.maps.LatLng(
-              position.coords.latitude
-              , position.coords.longitude
-            )
-        }, function (results, status)
-        {
-          if (status === google.maps.places.PlacesServiceStatus.OK) {
-            for (var i = 0, place; place = results[i]; i++)
-            {
-              var location = place.geometry.location;
+      var group = this.groups[type]
+        , markers = group.markers;
 
-              self.createMarker({
-                latitude: location.hb
-                , longitude: location.ib
-                , icon: parameters.icon
-              });
-            }
-          }
-        });
-
-      });
-    }
-
-  , toggleType: function (type)
-    {
-      var group = this.groups[type];
-
-      _.each(group.markers, function (marker)
+      for (var i = 0; i < markers.length; i++)
       {
-        marker.setVisible(!!group.isHidden);
-      });
+        markers[i].setVisible(!!group.isHidden); 
+      }
 
       group.isHidden = !group.isHidden;
     }
 
-  , listen: function (container)
+    , listen: function (container)
     {
       var self = this;
 
       container.addEventListener('click', function (e)
       {
         self.toggleType(e.target.dataset.type);
-        e.target.dataset.isActive = !e.target.dataset.isActive;
+        e.target.dataset.isActive = e.target.dataset.isActive !== 'true';
       }, false);
     }
 
-  , addControls: function (container)
+    // Hay que agregarle flexibilidad al html de esto
+    , addControls: function (container)
     {
       var list = document.createElement('ul')
-        , element;
+        , groups = this.groups
+        , element = null
+        , key = '';
 
-      _.each(this.groups, function (group, key)
+      for (key in groups)
       {
-        element = document.createElement('li');
+        if (groups.hasOwnProperty(key))
+        {
+          element = document.createElement('li');
 
-        element.dataset.type = key;
-        element.dataset.isActive = !group.isHidden;
+          element.dataset.type = key;
+          element.dataset.isActive = !groups[key].isHidden;
 
-        element.appendChild(document.createTextNode(key));
+          element.appendChild(document.createTextNode(key));
 
-        list.appendChild(element);
-      });
+          list.appendChild(element); 
+        }
+      }
 
       container.appendChild(list);
 
       this.listen(container);
-
     }
 
-  , init: function ()
+    , searchPlace: function (parameters)
+    {
+      if (!google.maps.places)
+      {
+        this.notify('PlacesService is not loaded properly');
+        return;
+      }
+      var placeService = new google.maps.places.PlacesService(this.map)
+      , self = this;
+      
+      placeService.textSearch({
+        query: parameters.query
+        , radius: parameters.radius || 1000
+        , location: this.initialPosition || this.toLatLng(this.options.defaultLocation)
+      }, function (results, status)
+      {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          for (var i = 0, place; place = results[i]; i++)
+          {
+            self.createMarker(place.geometry.location);
+          }
+        }
+      });
+    }
+
+    , init: function ()
     {
       if (document.getElementById(this.options.idMap))
       {
@@ -284,7 +338,7 @@
       }
       else
       {
-        console.error('Map placeholder not found.');
+        this.notify('Map placeholder not found.');
       }
 
       if (this.options.idControls && document.getElementById(this.options.idControls))
@@ -299,4 +353,4 @@
 
   window.Donde = Donde;
 
-}());
+})(document, window);
