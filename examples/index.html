@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>donde.js</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="map" class="map">
+    
+  </div>
+  <script src="https://maps.googleapis.com/maps/api/js?sensor=true&libraries=places"></script>
+  <script src="../donde.js"></script>
+  <script>
+    var app = new Donde({
+      markers: [
+        {latitude: -34.790626820565095, longitude: -56.352119473107685, type: 'Chupi'}
+      , {latitude: -34.79742147359551, longitude: -56.24659744591109, type: 'Baile'}
+      , {latitude: -34.81001579769451, longitude: -56.221292252489484, type: 'Chupi'}
+      , {latitude: -34.81661616310021, longitude: -56.13930858324866, type: 'Morfi'}
+      ]
+    , icons: {
+        Chupi: 'img/marker-1.png'
+      , Baile: 'img/marker-2.png'
+      , Morfi: 'img/marker-3.png'
+      }
+    }).init();
+
+    app.searchPlace({
+      query: 'zonamerica'
+    });
+
+  </script>
+</body>
+</html>
