@@ -20,7 +20,6 @@
     donde.searchPlace({
       query: 'zonamerica'
       , radius: 10000
-      , icon: 'img/marker-3.png'
     });
   </script>
 </body>

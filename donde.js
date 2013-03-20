@@ -192,36 +192,23 @@
       return this;
     }
 
-
   , searchPlace: function (parameters)
     {
       var placeService = new google.maps.places.PlacesService(this.map)
       , self = this;
       
-      navigator.geolocation.getCurrentPosition(function (position) {
-        placeService.textSearch({
-          query: parameters.query
-          , radius: parameters.radius || 1000
-          , location: new google.maps.LatLng(
-              position.coords.latitude
-              , position.coords.longitude
-            )
-        }, function (results, status)
-        {
-          if (status === google.maps.places.PlacesServiceStatus.OK) {
-            for (var i = 0, place; place = results[i]; i++)
-            {
-              var location = place.geometry.location;
-
-              self.createMarker({
-                latitude: location.hb
-                , longitude: location.ib
-                , icon: parameters.icon
-              });
-            }
+      placeService.textSearch({
+        query: parameters.query
+        , radius: parameters.radius || 1000
+        , location: this.initialPosition || this.toLatLng(this.options.defaultLocation)
+      }, function (results, status)
+      {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          for (var i = 0, place; place = results[i]; i++)
+          {
+            self.createMarker(place.geometry.location);
           }
-        });
-
+        }
       });
     }
 
