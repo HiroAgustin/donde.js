@@ -105,8 +105,7 @@
 
   , notify: function (message)
     {
-      // TODO: hay que pensar bien esto
-      console.log(message);
+      alert(message);
       return this;
     }
 
@@ -146,7 +145,7 @@
   , getUserPosition: function ()
     {
       var self = this;
-      // TODO: investigar si vale la pena usar watchPosition
+
       navigator.geolocation.getCurrentPosition(
         function (position)
         {
@@ -198,8 +197,6 @@
       }
       else
       {
-        // TODO: revisar esto, tiene sentido que si no hay markers,
-        // se recorran y se haga un add marker ?
         for (var i = 0; i < markers.length; i++)
         {
           self.addMarker(self.mapAttributes(markers[i]));
@@ -226,8 +223,7 @@
           {
             self.groups[key] = {};
           }
-          // MarkerImage es deprecado en la siguiente version de Google Maps
-          // Cambiar cuanto antes :D
+          
           self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height));
         }
       }
@@ -288,42 +284,6 @@
 
       container.appendChild(list);
       this.listen(container);
-
-      return this;
-    }
-
-  , searchPlace: function (parameters)
-    {
-      if (!google.maps.places)
-      {
-        this.notify('PlacesService is not loaded properly');
-        return;
-      }
-
-      var placeService = new google.maps.places.PlacesService(this.map)
-        , self = this;
-      
-      // esto retorna una promise o algo?
-      // si retorna promise quiero retornar esto
-      
-      placeService.textSearch(
-        {
-          query: parameters.query
-        , radius: parameters.radius || 1000
-        , location: this.initialPosition || this.toLatLng(this.options.defaultLocation)
-        }
-        // el callback podria venir por parametro?
-      , function (results, status)
-        {
-          if (status === google.maps.places.PlacesServiceStatus.OK)
-          {
-            for (var i = 0; i < results.length; i++)
-            {
-              self.createMarker(results[i].geometry.location);
-            }
-          }
-        }
-      );
 
       return this;
     }
