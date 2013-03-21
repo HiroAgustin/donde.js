@@ -14,8 +14,10 @@
           latitude: -34.8937720817105
         , longitude: -56.1659574508667
         }
-      , imageWidth: 37
-      , imageHeight: 34
+      , image: {
+          width: 37
+        , height: 34
+        }
       }
 
     , Donde = function Donde (options)
@@ -50,6 +52,8 @@
 
           return obj;
         }
+        // Podriamos hacer que Utils se encargue del for in
+        // hay que hacer un each :p
       };
 
   Utils.extend(Donde.prototype, {
@@ -64,7 +68,7 @@
       });
     }
 
-    , createMarker: function (marker)
+  , createMarker: function (marker)
     {
       marker = marker || {};
 
@@ -75,13 +79,13 @@
       });
     }
 
-    , toLatLng: function (position)
+  , toLatLng: function (position)
     {
       return position instanceof google.maps.LatLng ?
         position : new google.maps.LatLng(position.latitude, position.longitude);
     }
 
-    , setInitialPosition: function (position)
+  , setInitialPosition: function (position)
     {
       this.initialPosition = this.toLatLng(position);
       
@@ -91,38 +95,34 @@
       return this;
     }
 
-    , handleInitialLocationError: function ()
+  , handleInitialLocationError: function ()
     {
       this.setInitialPosition(this.options.defaultLocation);
       this.options.errorMessage && alert(this.options.errorMessage);
 
-      this.notify('Initial location not found.');
+      return this.notify('Initial location not found.');
+    }
 
-      // TODO: si adentro de notify podemos retornar "this",
-      // aca vamos a hacer return this.notify("lo que sea");
-
+  , notify: function (message)
+    {
+      // TODO: hay que pensar bien esto
+      console.log(message);
       return this;
     }
 
-    , notify: function (message)
-    {
-      // TODO: hay que pensar bien esto
-      // alert(message);
-    }
-
-    , panToPosition: function (position)
+  , panToPosition: function (position)
     {
       this.map.panTo(this.toLatLng(position));
 
       return this;
     }
 
-    , panToInitialPosition: function ()
+  , panToInitialPosition: function ()
     {
       return this.panToPosition(this.initialPosition);
     }
 
-    , addMarker: function (marker)
+  , addMarker: function (marker)
     {
       if (!(marker.type in this.groups))
       {
@@ -143,10 +143,10 @@
       return this;
     }
 
-    , getUserPosition: function ()
+  , getUserPosition: function ()
     {
       var self = this;
-
+      // TODO: investigar si vale la pena usar watchPosition
       navigator.geolocation.getCurrentPosition(
         function (position)
         {
@@ -165,7 +165,7 @@
       return this;
     }
 
-    , mapAttributes: function (marker)
+  , mapAttributes: function (marker)
     {
       if (this.options.mapping)
       {
@@ -187,7 +187,7 @@
       return marker;
     }
 
-    , addMarkers: function ()
+  , addMarkers: function ()
     {
       var self = this
         , markers = this.markers;
@@ -206,17 +206,17 @@
         }
       }
 
-
       return this;
     }
 
-    , createIcons: function ()
+  , createIcons: function ()
     {
       var key = ''
         , self = this
-        , icons = this.options.icons
-        , width = this.options.imageWidth
-        , height = this.options.imageHeight;
+        , options = this.options
+        , icons = options.icons
+        , width = options.image.width
+        , height = options.image.height;
 
       for (key in icons)
       {
@@ -228,15 +228,14 @@
           }
           // MarkerImage es deprecado en la siguiente version de Google Maps
           // Cambiar cuanto antes :D
-          self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height)); 
+          self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height));
         }
-
       }
 
       return this;
     }
 
-    , toggleType: function (type)
+  , toggleType: function (type)
     {
       var group = this.groups[type]
         , markers = group.markers;
@@ -247,9 +246,11 @@
       }
 
       group.isHidden = !group.isHidden;
+
+      return this;
     }
 
-    , listen: function (container)
+  , listen: function (container)
     {
       var self = this;
 
@@ -258,10 +259,12 @@
         self.toggleType(e.target.dataset.type);
         e.target.dataset.isActive = e.target.dataset.isActive !== 'true';
       }, false);
+
+      return this;
     }
 
     // Hay que agregarle flexibilidad al html de esto
-    , addControls: function (container)
+  , addControls: function (container)
     {
       var list = document.createElement('ul')
         , groups = this.groups
@@ -284,36 +287,48 @@
       }
 
       container.appendChild(list);
-
       this.listen(container);
+
+      return this;
     }
 
-    , searchPlace: function (parameters)
+  , searchPlace: function (parameters)
     {
       if (!google.maps.places)
       {
         this.notify('PlacesService is not loaded properly');
         return;
       }
+
       var placeService = new google.maps.places.PlacesService(this.map)
-      , self = this;
+        , self = this;
       
-      placeService.textSearch({
-        query: parameters.query
+      // esto retorna una promise o algo?
+      // si retorna promise quiero retornar esto
+      
+      placeService.textSearch(
+        {
+          query: parameters.query
         , radius: parameters.radius || 1000
         , location: this.initialPosition || this.toLatLng(this.options.defaultLocation)
-      }, function (results, status)
-      {
-        if (status === google.maps.places.PlacesServiceStatus.OK) {
-          for (var i = 0, place; place = results[i]; i++)
+        }
+        // el callback podria venir por parametro?
+      , function (results, status)
+        {
+          if (status === google.maps.places.PlacesServiceStatus.OK)
           {
-            self.createMarker(place.geometry.location);
+            for (var i = 0; i < results.length; i++)
+            {
+              self.createMarker(results[i].geometry.location);
+            }
           }
         }
-      });
+      );
+
+      return this;
     }
 
-    , init: function ()
+  , init: function ()
     {
       if (document.getElementById(this.options.idMap))
       {
@@ -348,7 +363,6 @@
 
       return this;
     }
-
   });
 
   window.Donde = Donde;
