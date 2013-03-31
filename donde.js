@@ -24,36 +24,58 @@
       {
         this.options = Utils.extend({}, defaultOptions, options);
         this.markers = this.options.markers;
+        
         return this;
       }
 
     , Utils = {
-        extend: function (obj)
+        // Podriamos hacer que Utils se encargue del for in
+        // hay que hacer un each :p
+        each: function (obj, iterator, context)
         {
-          var extentions = Array.prototype.slice.call(arguments, 1)
-            , source = null
-            , key = '';
-
-          for (var i = 0; i < extentions.length; i++)
+          if (!obj)
           {
-            source = extentions[i];
-
-            if (source)
-            {
-              for (key in source)
-              {
-                if (source.hasOwnProperty(key))
-                {
-                  obj[key] = source[key];
-                }
-              }
-            }  
+            return;
           }
+
+          if (obj.forEach === Array.prototype.forEach)
+          {
+            obj.forEach(iterator, context);
+          }
+          else if (obj instanceof Array)
+          {
+            for (var i = 0; i < obj.length; i++)
+            {
+              iterator.call(context, obj[i], i);
+            }
+          }
+          else
+          {
+            for (var key in obj)
+            {
+              if (obj.hasOwnProperty(key))
+              {
+                iterator.call(context, obj[key], key);
+              }
+            }
+          }
+        }
+
+      , extend: function (obj)
+        {
+          var self = this
+            , extensions = Array.prototype.slice.call(arguments, 1);
+
+          this.each(extensions, function (extension)
+          {
+            self.each(extension, function (value, key)
+            {
+              obj[key] = value;
+            });
+          });
 
           return obj;
         }
-        // Podriamos hacer que Utils se encargue del for in
-        // hay que hacer un each :p
       };
 
   Utils.extend(Donde.prototype, {
@@ -82,7 +104,9 @@
   , toLatLng: function (position)
     {
       return position instanceof google.maps.LatLng ?
-        position : new google.maps.LatLng(position.latitude, position.longitude);
+        position : new google.maps.LatLng(
+          position.latitude, position.longitude
+        );
     }
 
   , setInitialPosition: function (position)
@@ -106,6 +130,7 @@
   , notify: function (message)
     {
       alert(message);
+
       return this;
     }
 
@@ -166,80 +191,63 @@
 
   , mapAttributes: function (marker)
     {
-      if (this.options.mapping)
+      Utils.each(this.options.mapping, function (map, index)
       {
-        var mapping = this.options.mapping
-          , key = '';
-
-        for (key in mapping)
-        {
-          // 1.llamamos a la función de mapeo
-          // 2.le pasamos por parametro el marcador
-          // 3.seteamos en el marcador el resultado de la funcion
-          if (mapping.hasOwnProperty(key))
-          {
-            marker[key] = mapping[key](marker);
-          }
-        }
-      }
+        // 1.llamamos a la función de mapeo
+        // 2.le pasamos por parametro el marcador
+        // 3.seteamos en el marcador el resultado de la funcion
+        marker[index] = map(marker);
+      });
 
       return marker;
     }
 
   , addMarkers: function ()
     {
-      var self = this
-        , markers = this.markers;
+      var self = this;
 
-      if (!markers)
+      Utils.each(this.markers, function (item)
       {
-        this.notify('No markers found.');
-      }
-      else
-      {
-        for (var i = 0; i < markers.length; i++)
-        {
-          self.addMarker(self.mapAttributes(markers[i]));
-        }
-      }
+        self.addMarker(
+          self.mapAttributes(item)
+        );
+      });
 
       return this;
     }
 
   , createIcons: function ()
     {
-      var key = ''
-        , self = this
+      var self = this
         , options = this.options
-        , icons = options.icons
         , width = options.image.width
         , height = options.image.height;
 
-      for (key in icons)
+      Utils.each(options.icons, function (image, key)
       {
-        if (icons.hasOwnProperty(key))
+        if (!(key in self.groups))
         {
-          if (!(key in self.groups))
-          {
-            self.groups[key] = {};
-          }
-          
-          self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height));
+          self.groups[key] = {};
         }
-      }
+        
+        self.groups[key].icon = new google.maps.MarkerImage(
+          image, null, null, null, new google.maps.Size(
+            width, height
+          )
+        );
+      });
 
       return this;
     }
 
   , toggleType: function (type)
     {
-      var group = this.groups[type]
-        , markers = group.markers;
+      var group = this.groups[type];
 
-      for (var i = 0; i < markers.length; i++)
+      Utils.each(group.markers, function (marker)
       {
-        markers[i].setVisible(!!group.isHidden); 
-      }
+        marker.setVisible(!!group.isHidden);
+      });
 
       group.isHidden = !group.isHidden;
 
@@ -263,29 +271,25 @@
   , addControls: function (container)
     {
       var list = document.createElement('ul')
-        , groups = this.groups
-        , element = null
-        , key = '';
+        , element = null;
 
-      for (key in groups)
+      Utils.each(this.groups, function (item, key)
       {
-        if (groups.hasOwnProperty(key))
-        {
-          element = document.createElement('li');
+        element = document.createElement('li');
 
-          element.dataset.type = key;
-          element.dataset.isActive = !groups[key].isHidden;
+        element.dataset.type = key;
+        element.dataset.isActive = !item.isHidden;
 
-          element.appendChild(document.createTextNode(key));
+        element.appendChild(
+          document.createTextNode(key)
+        );
 
-          list.appendChild(element); 
-        }
-      }
+        list.appendChild(element);
+      });
 
       container.appendChild(list);
-      this.listen(container);
 
-      return this;
+      return this.listen(container);
     }
 
   , init: function ()
@@ -308,8 +312,9 @@
           this.handleInitialLocationError();
         }
 
-        this.createIcons();
-        this.addMarkers();
+        this
+          .createIcons()
+          .addMarkers();
       }
       else
       {
