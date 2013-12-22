@@ -25,6 +25,33 @@
       , Morfi: 'img/marker-3.png'
       }
     }).init();
+
+    app.searchPlace({
+      query: 'estadio'
+      , radius: 50000
+    });
+
+    app.searchPlace({
+      keyword: 'zonamerica'
+      , radius: 50000
+    });
+
+    var myCustomCallback = function (results, status) {
+      if (status === google.maps.places.PlacesServiceStatus.OK)
+      {
+        for (var i = 0; i < results.length; i++)
+        {
+          results[i].geometry.location.icon = 'img/marker-3.png';
+          app.createMarker(results[i].geometry.location);
+        }
+      }
+    };
+    
+    app.searchPlace({
+      name: 'decano'
+      , radius: 50000
+      , callback: myCustomCallback
+    });
   </script>
 </body>
 </html>
