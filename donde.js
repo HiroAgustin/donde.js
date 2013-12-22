@@ -189,6 +189,85 @@
       return this;
     }
 
+  , searchPlaceStatuses:
+    {
+      ERROR: 'se ha producido un error al establecer contacto con los servidores de Google.'
+      , INVALID_REQUEST: 'la solicitud no es válida.'
+      , OK: 'la respuesta contiene un resultado válido.'
+      , OVER_QUERY_LIMIT: 'se ha superado el límite de solicitudes de la página web.'
+      , REQUEST_DENIED: 'la página web no puede utilizar el servicio de Google Places.'
+      , UNKNOWN_ERROR: 'no se ha podido procesar la solicitud enviada al servicio de Google Places debido a un error del servidor. Puede que la solicitud se realice correctamente si lo intentas de nuevo.'
+      , ZERO_RESULTS: 'no se ha encontrado ningún resultado para esta solicitud.'
+    }
+
+  , searchPlaceCallback: function (results, status)
+    {
+      var self = this;
+
+      switch (status)
+      {
+        case google.maps.places.PlacesServiceStatus.OK:
+          Utils.each(results, function (place) {
+            self.createMarker(place.geometry.location);
+          });
+          break;
+        default:
+          this.notify(this.searchPlaceStatuses[status]);
+          break;
+      }
+    }
+
+  , searchPlace: function (parameters)
+    {
+      var places = google.maps.places
+        , placeService
+        , callback
+        , self = this;
+      
+      if (places)
+      {
+        placeService = new google.maps.places.PlacesService(this.map);
+
+        callback = parameters.callback || this.searchPlaceCallback;
+
+        // delete the callback from parameters in order to avoid send it to google
+        delete parameters.callback;
+
+        // esto retorna una promise o algo?
+        // si retorna promise quiero retornar esto
+        // 
+        // textSearch no retorna nada, undefined
+        // vamos a hacer las 3 busquedas disponibles segun los parametros que nos envian
+        
+        parameters.radius = parameters.radius || 10000;
+        parameters.location = this.initialPosition || this.toLatLng(this.options.defaultLocation);
+
+        if (parameters.query)
+        {
+          placeService.textSearch(
+            parameters
+            // el callback podria venir por parametro? si, ahora viene por parametro
+            , callback
+          );
+        }
+        else
+        {
+          placeService.search(
+            parameters
+            // el callback podria venir por parametro? si, ahora viene por parametro
+            , callback
+          );
+        }
+      }
+      else
+      {
+        return this.notify('PlacesService is not loaded.' +
+          'Please add PlacesService to your google map api link');
+      }
+
+      return this;
+     }
+
   , mapAttributes: function (marker)
     {
       Utils.each(this.options.mapping, function (map, index)
