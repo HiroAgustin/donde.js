@@ -77,6 +77,66 @@ mapping: {
 }
 ```
 
+### search
+
+Es posible realizar una busqueda de lugares de varias formas para que aparezcan las marcas en el mapa. Uno puede buscar por una query, que va a matchear con todos los lugares que tengan ese texto.
+
+Ejemplo:
+```
+app.searchPlace({
+  query: 'estadio'
+});
+```
+
+También se puede buscar por keyword, a lo que google va a buscar lugares que tengan esa keyword.
+
+Ejemplo:
+```
+app.searchPlace({
+  keyword: 'zonamerica'
+});
+```
+
+Y también se puede buscar por nombre de lugar. El nombre debe ser exacto.
+
+Ejemplo:
+```
+app.searchPlace({
+  name: 'decano'
+});
+```
+
+Al realizar una busqueda te damos la posibilidad de que escribas tu propio callback, nosotros brindamos uno por default, pero tu puedes escribir el tuyo.
+
+Ejemplo:
+```
+var myCustomCallback = function (results, status) {
+  if (status === google.maps.places.PlacesServiceStatus.OK)
+  {
+    for (var i = 0; i < results.length; i++)
+    {
+      results[i].geometry.location.icon = 'img/marker-3.png';
+      app.createMarker(results[i].geometry.location);
+    }
+  }
+};
+
+app.searchPlace({
+  name: 'decano'
+  , callback: myCustomCallback
+});
+```
+
+Otro parametro que es opcional pero no menos importante es el radio de busqueda que se va a emplear a partir de tu posicion actual. Google nos limita con un limite maximo de 50000 metros. Por default nosotros usamos 10000 metros.
+
+Ejemplo:
+```
+app.searchPlace({
+  query: 'estadio'
+  , radius: 50000
+});
+```
+
 ### icons
 
 Un objeto que mapea el tipo de marcador ("type") con la imagen a utilizar en el mapa. Ejemplo:
@@ -93,7 +153,7 @@ icons: {
 
 ***
 
-Por más detalles sobre los posibles attributos y metodos disponibles, ver los ejemplos.
+Por más detalles sobre los posibles attributos y metodos disponibles, ver los [ejemplos](https://github.com/HiroAgustin/donde.js/tree/master/examples).
 
 ## Contribuidores
 
