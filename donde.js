@@ -228,7 +228,7 @@
       {
         placeService = new google.maps.places.PlacesService(this.map);
 
-        callback = parameters.callback || this.searchPlaceCallback;
+        callback = parameters.callback || this.searchPlaceCallback.bind(this);
 
         // delete the callback from parameters in order to avoid send it to google
         delete parameters.callback;
@@ -258,14 +258,14 @@
             , callback
           );
         }
+
+        return this;
       }
       else
       {
         return this.notify('PlacesService is not loaded.' +
           'Please add PlacesService to your google map api link');
       }
-
-      return this;
      }
 
   , mapAttributes: function (marker)
