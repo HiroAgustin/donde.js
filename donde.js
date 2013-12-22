@@ -24,36 +24,58 @@
       {
         this.options = Utils.extend({}, defaultOptions, options);
         this.markers = this.options.markers;
+        
         return this;
       }
 
     , Utils = {
-        extend: function (obj)
+        // Podriamos hacer que Utils se encargue del for in
+        // hay que hacer un each :p
+        each: function (obj, iterator, context)
         {
-          var extentions = Array.prototype.slice.call(arguments, 1)
-            , source = null
-            , key = '';
-
-          for (var i = 0; i < extentions.length; i++)
+          if (!obj)
           {
-            source = extentions[i];
-
-            if (source)
-            {
-              for (key in source)
-              {
-                if (source.hasOwnProperty(key))
-                {
-                  obj[key] = source[key];
-                }
-              }
-            }  
+            return;
           }
+
+          if (obj.forEach === Array.prototype.forEach)
+          {
+            obj.forEach(iterator, context);
+          }
+          else if (obj instanceof Array)
+          {
+            for (var i = 0; i < obj.length; i++)
+            {
+              iterator.call(context, obj[i], i);
+            }
+          }
+          else
+          {
+            for (var key in obj)
+            {
+              if (obj.hasOwnProperty(key))
+              {
+                iterator.call(context, obj[key], key);
+              }
+            }
+          }
+        }
+
+      , extend: function (obj)
+        {
+          var self = this
+            , extensions = Array.prototype.slice.call(arguments, 1);
+
+          this.each(extensions, function (extension)
+          {
+            self.each(extension, function (value, key)
+            {
+              obj[key] = value;
+            });
+          });
 
           return obj;
         }
-        // Podriamos hacer que Utils se encargue del for in
-        // hay que hacer un each :p
       };
 
   Utils.extend(Donde.prototype, {
@@ -82,7 +104,9 @@
   , toLatLng: function (position)
     {
       return position instanceof google.maps.LatLng ?
-        position : new google.maps.LatLng(position.latitude, position.longitude);
+        position : new google.maps.LatLng(
+          position.latitude, position.longitude
+        );
     }
 
   , setInitialPosition: function (position)
@@ -105,8 +129,8 @@
 
   , notify: function (message)
     {
-      // TODO: hay que pensar bien esto
-      console.log(message);
+      alert(message);
+
       return this;
     }
 
@@ -146,7 +170,7 @@
   , getUserPosition: function ()
     {
       var self = this;
-      // TODO: investigar si vale la pena usar watchPosition
+
       navigator.geolocation.getCurrentPosition(
         function (position)
         {
@@ -165,85 +189,144 @@
       return this;
     }
 
+  , searchPlaceStatuses:
+    {
+      ERROR: 'se ha producido un error al establecer contacto con los servidores de Google.'
+      , INVALID_REQUEST: 'la solicitud no es válida.'
+      , OK: 'la respuesta contiene un resultado válido.'
+      , OVER_QUERY_LIMIT: 'se ha superado el límite de solicitudes de la página web.'
+      , REQUEST_DENIED: 'la página web no puede utilizar el servicio de Google Places.'
+      , UNKNOWN_ERROR: 'no se ha podido procesar la solicitud enviada al servicio de Google Places debido a un error del servidor. Puede que la solicitud se realice correctamente si lo intentas de nuevo.'
+      , ZERO_RESULTS: 'no se ha encontrado ningún resultado para esta solicitud.'
+    }
+
+  , searchPlaceCallback: function (results, status)
+    {
+      var self = this;
+
+      switch (status)
+      {
+        case google.maps.places.PlacesServiceStatus.OK:
+          Utils.each(results, function (place) {
+            self.createMarker(place.geometry.location);
+          });
+          break;
+        default:
+          this.notify(this.searchPlaceStatuses[status]);
+          break;
+      }
+    }
+
+  , searchPlace: function (parameters)
+    {
+      var places = google.maps.places
+        , placeService
+        , callback
+        , self = this;
+      
+      if (places)
+      {
+        placeService = new google.maps.places.PlacesService(this.map);
+
+        callback = parameters.callback || this.searchPlaceCallback.bind(this);
+
+        // delete the callback from parameters in order to avoid send it to google
+        delete parameters.callback;
+
+        // esto retorna una promise o algo?
+        // si retorna promise quiero retornar esto
+        // 
+        // textSearch no retorna nada, undefined
+        // vamos a hacer las 3 busquedas disponibles segun los parametros que nos envian
+        
+        parameters.radius = parameters.radius || 10000;
+        parameters.location = this.initialPosition || this.toLatLng(this.options.defaultLocation);
+
+        if (parameters.query)
+        {
+          placeService.textSearch(
+            parameters
+            // el callback podria venir por parametro? si, ahora viene por parametro
+            , callback
+          );
+        }
+        else
+        {
+          placeService.search(
+            parameters
+            // el callback podria venir por parametro? si, ahora viene por parametro
+            , callback
+          );
+        }
+
+        return this;
+      }
+      else
+      {
+        return this.notify('PlacesService is not loaded.' +
+          'Please add PlacesService to your google map api link');
+      }
+     }
+
   , mapAttributes: function (marker)
     {
-      if (this.options.mapping)
+      Utils.each(this.options.mapping, function (map, index)
       {
-        var mapping = this.options.mapping
-          , key = '';
-
-        for (key in mapping)
-        {
-          // 1.llamamos a la función de mapeo
-          // 2.le pasamos por parametro el marcador
-          // 3.seteamos en el marcador el resultado de la funcion
-          if (mapping.hasOwnProperty(key))
-          {
-            marker[key] = mapping[key](marker);
-          }
-        }
-      }
+        // 1.llamamos a la función de mapeo
+        // 2.le pasamos por parametro el marcador
+        // 3.seteamos en el marcador el resultado de la funcion
+        marker[index] = map(marker);
+      });
 
       return marker;
     }
 
   , addMarkers: function ()
     {
-      var self = this
-        , markers = this.markers;
+      var self = this;
 
-      if (!markers)
+      Utils.each(this.markers, function (item)
       {
-        this.notify('No markers found.');
-      }
-      else
-      {
-        // TODO: revisar esto, tiene sentido que si no hay markers,
-        // se recorran y se haga un add marker ?
-        for (var i = 0; i < markers.length; i++)
-        {
-          self.addMarker(self.mapAttributes(markers[i]));
-        }
-      }
+        self.addMarker(
+          self.mapAttributes(item)
+        );
+      });
 
       return this;
     }
 
   , createIcons: function ()
     {
-      var key = ''
-        , self = this
+      var self = this
         , options = this.options
-        , icons = options.icons
         , width = options.image.width
         , height = options.image.height;
 
-      for (key in icons)
+      Utils.each(options.icons, function (image, key)
       {
-        if (icons.hasOwnProperty(key))
+        if (!(key in self.groups))
         {
-          if (!(key in self.groups))
-          {
-            self.groups[key] = {};
-          }
-          // MarkerImage es deprecado en la siguiente version de Google Maps
-          // Cambiar cuanto antes :D
-          self.groups[key].icon = new google.maps.MarkerImage(icons[key], null, null, null, new google.maps.Size(width, height));
+          self.groups[key] = {};
         }
-      }
+        
+        self.groups[key].icon = new google.maps.MarkerImage(
+          image, null, null, null, new google.maps.Size(
+            width, height
+          )
+        );
+      });
 
       return this;
     }
 
   , toggleType: function (type)
     {
-      var group = this.groups[type]
-        , markers = group.markers;
+      var group = this.groups[type];
 
-      for (var i = 0; i < markers.length; i++)
+      Utils.each(group.markers, function (marker)
       {
-        markers[i].setVisible(!!group.isHidden); 
-      }
+        marker.setVisible(!!group.isHidden);
+      });
 
       group.isHidden = !group.isHidden;
 
@@ -267,65 +350,25 @@
   , addControls: function (container)
     {
       var list = document.createElement('ul')
-        , groups = this.groups
-        , element = null
-        , key = '';
+        , element = null;
 
-      for (key in groups)
+      Utils.each(this.groups, function (item, key)
       {
-        if (groups.hasOwnProperty(key))
-        {
-          element = document.createElement('li');
+        element = document.createElement('li');
 
-          element.dataset.type = key;
-          element.dataset.isActive = !groups[key].isHidden;
+        element.dataset.type = key;
+        element.dataset.isActive = !item.isHidden;
 
-          element.appendChild(document.createTextNode(key));
+        element.appendChild(
+          document.createTextNode(key)
+        );
 
-          list.appendChild(element); 
-        }
-      }
+        list.appendChild(element);
+      });
 
       container.appendChild(list);
-      this.listen(container);
 
-      return this;
-    }
-
-  , searchPlace: function (parameters)
-    {
-      if (!google.maps.places)
-      {
-        this.notify('PlacesService is not loaded properly');
-        return;
-      }
-
-      var placeService = new google.maps.places.PlacesService(this.map)
-        , self = this;
-      
-      // esto retorna una promise o algo?
-      // si retorna promise quiero retornar esto
-      
-      placeService.textSearch(
-        {
-          query: parameters.query
-        , radius: parameters.radius || 1000
-        , location: this.initialPosition || this.toLatLng(this.options.defaultLocation)
-        }
-        // el callback podria venir por parametro?
-      , function (results, status)
-        {
-          if (status === google.maps.places.PlacesServiceStatus.OK)
-          {
-            for (var i = 0; i < results.length; i++)
-            {
-              self.createMarker(results[i].geometry.location);
-            }
-          }
-        }
-      );
-
-      return this;
+      return this.listen(container);
     }
 
   , init: function ()
@@ -348,8 +391,9 @@
           this.handleInitialLocationError();
         }
 
-        this.createIcons();
-        this.addMarkers();
+        this
+          .createIcons()
+          .addMarkers();
       }
       else
       {

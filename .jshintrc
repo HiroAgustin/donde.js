@@ -1,9 +1,12 @@
 {
   "predef": ["google"]
+, "quotmark": "single"
+
+, "camelcase": true
 , "laxcomma": true
 , "browser": true
 , "eqeqeq": true
 , "devel": true
+, "forin": true
 , "expr": true
-, "boss": true
 }
