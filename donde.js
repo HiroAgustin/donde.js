@@ -108,6 +108,8 @@
             this.map.setCenter(this.initialPosition);
             this.userLocationMarker.setPosition(this.initialPosition);
 
+            this.panToInitialPosition();
+
             return this;
         }
 
@@ -293,17 +295,13 @@
 
                 this.userLocationMarker = this.createMarker();
                 this.userLocationMarker.setClickable(false);
-
-                if ('geolocation' in navigator)
-                {
-                    this.getUserPosition();
-                }
-                else
-                {
-                    this.handleInitialLocationError();
-                }
+                
+                this.setInitialPosition(this.options.defaultLocation);
 
                 this.createIcons().addMarkers();
+
+                if ('geolocation' in navigator)
+                    this.getUserPosition();
             }
             else
             {
