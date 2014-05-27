@@ -279,11 +279,16 @@
             return this.listen(container);
         }
 
+    ,   $: function (id)
+        {
+            return doc.getElementById(id);
+        }
+
     ,   init: function ()
         {
-            if (doc.getElementById(this.options.idMap))
+            if (this.$(this.options.idMap))
             {
-                this.map = this.createMap(doc.getElementById(this.options.idMap));
+                this.map = this.createMap(this.$(this.options.idMap));
 
                 this.userLocationMarker = this.createMarker();
                 this.userLocationMarker.setClickable(false);
@@ -306,9 +311,9 @@
                 this.notify('Map placeholder not found.');
             }
 
-            if (this.options.idControls && doc.getElementById(this.options.idControls))
+            if (this.options.idControls && this.$(this.options.idControls))
             {
-                this.addControls(doc.getElementById(this.options.idControls));
+                this.addControls(this.$(this.options.idControls));
             }
 
             return this;
