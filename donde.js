@@ -68,6 +68,7 @@
     {
         this.options = Utils.extend({}, defaultOptions, options);
         this.markers = this.options.markers;
+        this.groups = {};
         
         return this;
     };
@@ -292,8 +293,6 @@
 
                 this.userLocationMarker = this.createMarker();
                 this.userLocationMarker.setClickable(false);
-
-                this.groups = {};
 
                 if ('geolocation' in navigator)
                 {
