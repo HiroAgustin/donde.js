@@ -193,11 +193,11 @@
             return marker;
         }
 
-    ,   addMarkers: function ()
+    ,   addMarkers: function (markers)
         {
             var self = this;
 
-            Utils.each(this.markers, function (item)
+            Utils.each(markers, function (item)
             {
                 self.addMarker(
                     self.mapAttributes(item)
@@ -298,10 +298,12 @@
                 
                 this.setInitialPosition(this.options.defaultLocation);
 
-                this.createIcons().addMarkers();
+                this.createIcons().addMarkers(this.options.markers);
 
                 if ('geolocation' in navigator)
+                {
                     this.getUserPosition();
+                }
             }
             else
             {
