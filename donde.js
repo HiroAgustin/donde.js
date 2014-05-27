@@ -34,7 +34,7 @@
             }
         }
 
-    , extend: function (obj)
+    ,   extend: function (obj)
         {
             var self = this
             ,   extensions = Array.prototype.slice.call(arguments, 1);
