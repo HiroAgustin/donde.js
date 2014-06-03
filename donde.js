@@ -210,9 +210,7 @@
     ,   createIcons: function ()
         {
             var self = this
-            ,   options = this.options
-            ,   width = options.image.width
-            ,   height = options.image.height;
+            ,   options = this.options;
 
             Utils.each(options.icons, function (image, key)
             {
@@ -221,14 +219,23 @@
                     self.groups[key] = {};
                 }
                 
-                self.groups[key].icon = new google.maps.MarkerImage(
-                    image, null, null, null, new google.maps.Size(
-                        width, height
-                    )
-                );
+                self.groups[key].icon = self.createIcon(image);
             });
 
             return this;
+        }
+
+    ,   createIcon: function (image)
+        {
+            var options = this.options
+            ,   width = options.image.width
+            ,   height = options.image.height;
+
+            return new google.maps.MarkerImage(
+                image, null, null, null, new google.maps.Size(
+                    width, height
+                )
+            );
         }
 
     ,   toggleType: function (type)
