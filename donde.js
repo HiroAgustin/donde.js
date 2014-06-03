@@ -319,6 +319,8 @@
         }
     });
 
+    win.Utils = Utils;
+
     win.Donde = Donde;
 
 })(document, window);
