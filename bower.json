@@ -1,9 +1,26 @@
 {
   "name": "donde.js",
-  "version": "0.3.2",
-  "main": "./donde.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/HiroAgustin/donde.js.git"
-  }
+  "version": "0.4.0",
+  "main": "donde.js",
+  "homepage": "https://github.com/HiroAgustin/donde.js",
+  "authors": [
+    "HiroAgustin <hiroagustin@gmail.com>"
+  ],
+  "description": "Simplify the use of GoogleMaps",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "google",
+    "maps",
+    "donde"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
 }
