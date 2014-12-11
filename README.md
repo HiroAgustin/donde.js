@@ -1,103 +1,64 @@
-# donde.js v0.3.2
+# donde.js
 
-Donde.js es una bibloteca de JavaScript que facilita el uso del servicio GoogleMaps para acciones como:
+> Simplifies the basic use of Google Maps.
 
-* Agregar un mapa al sitio.
-* Centrar el mapa en la locación actual del usuario.
-* Agregar marcadores al mapa.
-* Permitir al usuario filtrar los marcadores.
+This being:
 
-## Instalación
+* Embedding a map.
+* Centering to the user's current location.
+* Add a set of markers to the map.
+* Apply a filter to the markers.
 
-Bajar desde la [pagina del projecto](https://github.com/HiroAgustin/donde.js).
+## Installation
 
-Utilizando [Bower](http://twitter.github.com/bower/): `bower install donde.js`.
+Install the library by running: `bower install donde.js --save`.
 
-## API
+## Usage
 
-La forma más simple del codigo se reduce a: `new Donde(options).init();`
-siendo "options" un objecto con cualquiera de los siguientes attributos:
+Once you have included the script in your markup, you can run:
 
-### idMap
-
-Un string con la id del elemento en el cual se va a renderear el mapa.
-Por defecto buscamos la id "map": `mapId: 'map'`.
-
-### defaultLocation
-
-En caso de que no se pueda obtener la geo-localización del usuario, el mapa se centrará en base a este objeto.
-El mismo debe de tener 2 attributos: "latitude" y "longitude".
-
-Por defecto lo centramos en la terminal de Tres Cruces en Montevideo, Uruguay:
-
-```
-defaultLocation: {
-  latitude: -34.8937720817105
-, longitude: -56.1659574508667
-}
-```
-
-### markers
-
-Un array de objectos, cada uno va a ser agregado al mapa como un marcador.
-Es necesario que contengan la información sobre el lugar a ser colocados.
-En caso de querer asociar el marcador a una imagen, debe de tener un "type".
-
-Ejemplo:
-```
-markers: [
-  {latitude: -34.790626820565095, longitude: -56.352119473107685, type: 'Super'}
-, {latitude: -34.79742147359551, longitude: -56.24659744591109, type: 'Baile'}
-, {latitude: -34.81001579769451, longitude: -56.221292252489484, type: 'Super'}
-, {latitude: -34.81661616310021, longitude: -56.13930858324866, type: 'Kiosco'}
-  ...
-]
-```
-
-### mapping
-
-Es posible que la data de los marcadores no se encuentre en el formato deseado, en esos casos
-usamos el atributo mapping para mapear los valores de los datos con los requeridos por la bibloteca.
-
-Ejemplo:
-```
-mapping: {
-  latitude: function (marker)
-  {
-    return marker.geometry.coordinates[1]
+```js
+new Donde({
+  container: 'js-map'
+, zoom: 15
+, defaultPosition: {
+    latitude: -34.8937720817105
+  , longitude: -56.1659574508667
   }
-, longitude: function (marker)
-  {
-    return marker.geometry.coordinates[0]
-  }
-, type: function (marker)
-  {
-    return item.properties.NAME;
-  }
-}
+, markers: [
+    {
+      icon: 'img/marker-1.png'
+    , type: 'A'
+    , position: {
+        latitude: -34.790626820565095
+      , longitude: -56.352119473107685,
+      }
+    }
+  , {
+      icon: 'img/marker-2.png'
+    , type: 'B'
+    , position: {
+        latitude: -34.79742147359551
+      , longitude: -56.24659744591109
+      }
+    }
+  ]
+});
 ```
 
-### icons
+## Options
 
-Un objeto que mapea el tipo de marcador ("type") con la imagen a utilizar en el mapa. Ejemplo:
+1. `container` is the id of the DOM element where the map will be rendered.
 
-```
-icons: {
-  Super: 'img/marker-super.png'
-, Baile: 'img/marker-baile.png'
-, Kiosco: 'img/marker-kiosco.png'
-  ...
-}
-```
-**Recordar:** la url de la imagen es relativa al lugar donde llaman al script.
+2. `zoom` is the map's default zoom value.
 
-***
+3. `defaultPosition` is where the map will be centered and the user's marker positioned in case geolocation is unavailable.
 
-Por más detalles sobre los posibles attributos y metodos disponibles, ver los ejemplos.
+4. Markers
+    * `icon` is the path to the markers image.
+    * `type` is used for the filtering of markers.
+    * `position` is the geolocation where the marker should be placed.
 
-## Contribuidores
+## License
 
-* [Agustin Diaz](https://github.com/HiroAgustin) - [@hiroagustin](https://twitter.com/hiroagustin)
-* [Nicolas Montesdeoca](https://github.com/nmontesdeoca) - [@_nmontesdeoca](https://twitter.com/_nmontesdeoca)
-
-Cualquier tipo de colaboración o comentario es agradecido **:)**
+[MIT license](https://github.com/HiroAgustin/donde.js/blob/master/LICENSE.md).
