@@ -1,13 +1,10 @@
 # donde.js
 
 > Simplifies the basic use of Google Maps.
-
-This being:
-
-* Embedding a map.
-* Centering to the user's current location.
-* Add a set of markers to the map.
-* Apply a filter to the markers.
+  * Embedding a map.
+  * Centering to the user's current location.
+  * Add a set of markers to the map.
+  * Apply a filter to the markers.
 
 ## Installation
 
