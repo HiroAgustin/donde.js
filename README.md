@@ -1,10 +1,11 @@
 # donde.js
 
 > Simplifies the basic use of Google Maps.
-  * Embedding a map.
-  * Centering to the user's current location.
-  * Add a set of markers to the map.
-  * Apply a filter to the markers.
+
+* Embed a map.
+* Center it to the user's location.
+* Add markers.
+* Filter the markers.
 
 ## Installation
 
@@ -46,11 +47,8 @@ new Donde({
 ## Options
 
 1. `container` is the id of the DOM element where the map will be rendered.
-
 2. `zoom` is the map's default zoom value.
-
 3. `defaultPosition` is where the map will be centered and the user's marker positioned in case geolocation is unavailable.
-
 4. Markers
     * `icon` is the path to the markers image.
     * `type` is used for the filtering of markers.
